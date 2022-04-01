@@ -1,21 +1,12 @@
 use std::collections::HashMap;
 
+use rand::distributions::Standard;
+use rand::prelude::*;
 use rand::Rng;
 
 use crate::bullet::Bullet;
 use crate::helpers::*;
 
-pub struct Ship {
-    position: Position,
-    prev_position: Position,
-    destination: Position,
-    alive: bool,
-    move_power: i32,
-    bullet_power: i32,
-    team: Team,
-}
-
-#[derive(Rand)]
 enum Team {
     BLUE,
     RED,
@@ -25,6 +16,32 @@ enum Team {
     BROWN,
     PURPLE,
     WHITE,
+}
+
+impl Distribution<Team> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Team {
+        match rng.gen_range(0..8) {
+            0 => Team::BLUE,
+            1 => Team::RED,
+            2 => Team::YELLOW,
+            3 => Team::GREEN,
+            4 => Team::ORANGE,
+            5 => Team::BROWN,
+            6 => Team::PURPLE,
+            7 => Team::WHITE,
+        }
+    }
+}
+
+pub struct Ship {
+    position: Position,
+    prev_position: Position,
+    destination: Position,
+    alive: bool,
+    move_power: i32,
+    bullet_power: i32,
+    team: Team,
+    rng: ThreadRng,
 }
 
 impl Ship {
@@ -39,6 +56,7 @@ impl Ship {
             move_power: 3,
             bullet_power: rand::thread_rng().gen_range(0..=10),
             team: t,
+            rng: thread_rng(),
         }
     }
 
@@ -52,7 +70,7 @@ impl Ship {
         self.bulletPower = 0;
 
         // wuss out
-        if rand(2) == 0 {
+        if self.rand(2) == 0 {
             return None;
         }
 
@@ -70,7 +88,7 @@ impl Ship {
                 break;
             }
 
-            let ship = ships[rand(ships.len())];
+            let ship = ships[self.rand(ships.len())];
 
             // already seen
             if seen[ship] {
@@ -128,7 +146,7 @@ impl Ship {
 
     fn move_ship(self, entities: Entities) {
         if self.movePower != 3 {
-            self.movePower = self.movePower + 1;
+            self.movePower += 1;
 
             return;
         }
@@ -142,7 +160,7 @@ impl Ship {
     }
 
     fn get_destination(self, entities: Entities) -> Position {
-        if rand(2) == 0 {
+        if self.rand(2) == 0 {
             return random_position();
         }
 
@@ -176,22 +194,22 @@ impl Ship {
 
     fn move_up(self) {
         self.prev_position[1] = self.position[1];
-        self.position[1] = self.position[1] + 1;
+        self.position[1] += 1;
     }
 
     fn move_down(self) {
         self.prev_position[1] = self.position[1];
-        self.position[1] = self.position[1] - 1;
+        self.position[1] -= 1;
     }
 
     fn move_right(self) {
         self.prev_position[0] = self.position[0];
-        self.position[0] = self.position[0] + 1;
+        self.position[0] += 1;
     }
 
     fn move_left(self) {
         self.prev_position[0] = self.position[0];
-        self.position[0] = self.position[0] - 1;
+        self.position[0] -= 1;
     }
 }
 
@@ -234,9 +252,7 @@ impl Entity for Ship {
     fn on_collide<E: Entity>(self, e: E) {
         if let ship @ Ship = e {
             // don't explode colliding with same team
-            if ship.team == self.team {
-                return;
-            } else {
+            if ship.team != self.team {
                 self.alive = false
             }
         }
@@ -246,3 +262,5 @@ impl Entity for Ship {
         return true;
     }
 }
+
+impl HasRng for Ship {}

@@ -2,6 +2,9 @@
 // 	"math/rand"
 // )
 
+use rand::prelude::*;
+use rand::{thread_rng, Rng};
+
 use crate::{ship::Ship, terminal::get_size};
 
 pub struct Position(pub i32, pub i32);
@@ -17,6 +20,16 @@ pub trait Entity {
 }
 
 pub type Entities = Vec<Box<dyn Entity>>;
+
+pub trait HasRng {
+    fn rand<T>(self, limit: T) -> T {
+        rand(self.rng, limit)
+    }
+}
+
+fn rand<T>(rng: ThreadRng, limit: T) -> T {
+    rng.gen_range(0..limit)
+}
 
 pub fn collided<E1: Entity, E2: Entity>(entity_a: E1, entity_b: E2) -> bool {
     let (posA, posB) = (entity_a.getPosition(), entity_b.getPosition());
@@ -40,9 +53,11 @@ pub fn positions_are_same(a: Position, b: Position) -> bool {
 }
 
 pub fn random_position() -> (i32, i32) {
+    let rng = thread_rng();
+
     let (width, height) = get_size();
-    let x = rand.Intn(width - 1) + 1;
-    let y = rand.Intn(height - 1) + 2;
+    let x = rng.gen_range(0..width) + 1;
+    let y = rng.gen_range(0..height) + 2;
 
     (x, y)
 }

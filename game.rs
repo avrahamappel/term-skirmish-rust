@@ -24,6 +24,8 @@ pub struct Game {
     rng: ThreadRng,
 }
 
+impl HasRng for Game {}
+
 impl Game {
     pub fn new() -> Game {
         let default_team_count = 2;
@@ -79,14 +81,10 @@ impl Game {
     }
 
     fn reinforce(self) {
-        let team =
-            // team(
-                self.rng.gen_range(0..self.numTeams)
-                // )
-                ;
-        let ship_count = self.rng.gen_range(0..self.maxShipsPerWave) + 1;
+        let team = self.rand(self.numTeams);
+        let ship_count = self.rand(self.maxShipsPerWave) + 1;
 
-        for i in 0..=ship_count {
+        for _ in 0..=ship_count {
             let ship = Ship::new(team);
             self.entities.append(&ship);
 
@@ -110,7 +108,7 @@ impl Game {
             self.entities.append(&mut new_entities);
 
             // 0.5% chance of reinforcements
-            if self.rng.gen_range(0, 200) == 0 {
+            if self.rand(200) == 0 {
                 self.reinforce();
             }
         }

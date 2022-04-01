@@ -1,7 +1,5 @@
-use std::error::Error;
-
-use terminal_size;
-// use terminal_size::{Height, Width};
+use terminal_size::terminal_size;
+use terminal_size::{Height, Width};
 
 use crate::helpers::Position;
 
@@ -14,7 +12,7 @@ pub fn show_cursor() {
 }
 
 pub fn move_cursor(p: Position) {
-    print!("\033[{};{}H", p[1], p[0]);
+    print!("\033[{};{}H", p.1, p.0);
 }
 
 pub fn clear() {
@@ -29,8 +27,9 @@ pub fn render() {
     // screen.Flush()
 }
 
-pub fn get_size() -> Result<(i32, i32), dyn Error> {
-    if let Some(width, height) = terminal_size::terminal_size()? {
-        Ok((width, height - 1))
+pub fn get_size() -> Option<(u16, u16)> {
+    match terminal_size() {
+        Some((Width(width), Height(height))) => Some((width, height - 1)),
+        _ => None,
     }
 }
