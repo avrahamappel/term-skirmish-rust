@@ -1,0 +1,15 @@
+[package]
+name = "term-skirmish-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.8.5"
+# rand_derive
+terminal_size = "0.1.13"
+
+[[bin]]
+name = "term-skirmish-rust"
+path = "main.rs"
