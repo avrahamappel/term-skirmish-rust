@@ -1,16 +1,18 @@
+use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
 use crate::terminal::get_size;
 
+#[derive(PartialEq, Eq, Hash)]
 pub struct Bullet {
     position: Position,
     prev_position: Position,
-    direction: (i32, i32),
+    direction: (i8, i8),
     active: bool,
-    bullet_power: i32,
+    bullet_power: u16,
 }
 
 impl Bullet {
-    pub fn new(pos: Position, direction: (i32, i32)) -> Bullet {
+    pub fn new(pos: Position, direction: (i8, i8)) -> Bullet {
         return Bullet {
             position: pos,
             prev_position: pos,
@@ -21,9 +23,9 @@ impl Bullet {
     }
 
     fn move_self(self) {
-        self.prev_position = self.getPosition();
-        let x_pos = self.position[0] + self.direction[0];
-        let y_pos = self.position[1] + self.direction[1];
+        self.prev_position = self.get_position();
+        let x_pos = self.position.0 + self.direction.0 as u16;
+        let y_pos = self.position.1 + self.direction.1 as u16;
 
         let (maxX, maxY) = get_size();
         if x_pos < 1 || x_pos > maxX || y_pos < 1 || y_pos > maxY {
@@ -36,26 +38,26 @@ impl Bullet {
     }
 }
 
-impl Entity for Bullet {
-    fn avatar(self) -> String {
+impl EntityBehavior for Bullet {
+    fn avatar(&self) -> &str {
         return "🔸";
     }
 
-    fn get_position(self) -> Position {
+    fn get_position(&self) -> Position {
         return self.position;
     }
 
-    fn get_prev_position(self) -> Position {
+    fn get_prev_position(&self) -> Position {
         return self.prev_position;
     }
 
-    fn should_remove(self) -> bool {
+    fn should_remove(&self) -> bool {
         return !self.active;
     }
 
     fn take_turn(self, entities: Entities) -> Entities {
         if self.bullet_power == 1 {
-            self.moveSelf();
+            self.move_self();
             self.bullet_power = 0;
 
             return vec![];
@@ -66,7 +68,7 @@ impl Entity for Bullet {
         return vec![];
     }
 
-    fn on_collide<E: Entity>(self, e: E) {
+    fn on_collide(self, _: Entity) {
         self.active = false
     }
 

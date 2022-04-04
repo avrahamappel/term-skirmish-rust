@@ -1,4 +1,5 @@
 mod bullet;
+mod entities;
 mod explosion;
 mod game;
 mod helpers;

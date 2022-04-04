@@ -1,8 +1,10 @@
+use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
 
+#[derive(PartialEq, Eq, Hash)]
 pub struct Explosion {
     position: Position,
-    health: i32,
+    health: u16,
 }
 
 impl Explosion {
@@ -14,20 +16,20 @@ impl Explosion {
     }
 }
 
-impl Entity for Explosion {
-    fn get_position(self) -> Position {
+impl EntityBehavior for Explosion {
+    fn get_position(&self) -> Position {
         return self.position;
     }
 
-    fn get_prev_position(self) -> Position {
+    fn get_prev_position(&self) -> Position {
         return self.position;
     }
 
-    fn should_remove(self) -> bool {
+    fn should_remove(&self) -> bool {
         return self.health == 0;
     }
 
-    fn avatar(self) -> String {
+    fn avatar(&self) -> &str {
         return "💥";
     }
 
@@ -39,9 +41,9 @@ impl Entity for Explosion {
         entities
     }
 
-    fn on_collide(self, other_entity: dyn Entity) {
+    fn on_collide(self, other_entity: Entity) {
         match other_entity {
-            other_explosion @ Explosion => {
+            Entity::Explosion(other_explosion) => {
                 if self.health > other_explosion.health {
                     self.health += 100;
                     other_explosion.health = 0;

@@ -10,21 +10,19 @@ use std::time::Duration;
 
 use rand::{prelude::*, thread_rng};
 
-use crate::explosion::Explosion;
+use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
-use crate::ship::Ship;
+use crate::ship::Team;
 use crate::terminal::*;
 
 pub struct Game {
     over: bool,
-    num_teams: i32,
-    max_ships_per_wave: i32,
+    num_teams: u16,
+    max_ships_per_wave: u16,
     entities: Entities,
-    ship_count: i32,
+    ship_count: u16,
     rng: ThreadRng,
 }
-
-impl HasRng for Game {}
 
 impl Game {
     pub fn new() -> Game {
@@ -81,14 +79,14 @@ impl Game {
     }
 
     fn reinforce(self) {
-        let team = self.rand(self.numTeams);
-        let ship_count = self.rand(self.maxShipsPerWave) + 1;
+        let team = Team::from_rand(self.rng.gen_range(0..self.num_teams));
+        let ship_count = self.rng.gen_range(0..self.max_ships_per_wave) + 1;
 
         for _ in 0..=ship_count {
-            let ship = Ship::new(team);
-            self.entities.append(&ship);
+            let ship = Entity::new_ship(team);
+            self.entities.push(ship);
 
-            self.ship_count = self.ship_count + 1;
+            self.ship_count += 1;
         }
     }
 
@@ -103,33 +101,33 @@ impl Game {
             self.draw_game();
 
             // 60 fps
-            thread::sleep(Duration::new(1, 0).as_millis() / 60);
+            thread::sleep(Duration::from_millis(1000 / 60));
 
             self.entities.append(&mut new_entities);
 
             // 0.5% chance of reinforcements
-            if self.rand(200) == 0 {
+            if self.rng.gen_range(0..200) == 0 {
                 self.reinforce();
             }
         }
     }
 
-    fn take_turns(self) -> Vec<impl Entity> {
+    fn take_turns(self) -> Entities {
         let new_entities = Vec::new();
 
         for entity in self.entities {
-            let es = entity.takeTurn(self.entities);
-            new_entities.append(es);
+            let es = entity.take_turn(self.entities);
+            new_entities.append(&mut es);
         }
 
         new_entities
     }
 
     fn check_collisions(self) {
-        let collided_entities = HashMap::new();
+        let collided_entities: HashMap<Entity, ()> = HashMap::new();
 
         for entity in self.entities {
-            if collided_entities.contains_key(entity) && entity {
+            if collided_entities.contains_key(&entity) {
                 continue;
             }
 
@@ -139,9 +137,9 @@ impl Game {
                 }
 
                 if collided(entity, otherEntity) {
-                    entity.onCollide(otherEntity);
+                    entity.on_collide(otherEntity);
 
-                    collided_entities[entity] = ();
+                    collided_entities.insert(entity, ());
                 }
             }
         }
@@ -151,15 +149,15 @@ impl Game {
         let remaining_entities = Vec::new();
 
         for entity in self.entities {
-            if !entity.shouldRemove() {
-                remaining_entities.append(entity);
+            if !entity.should_remove() {
+                remaining_entities.push(entity);
 
                 continue;
             }
 
-            if entity.onRemoveExplode() {
-                let explosion = Explosion::new(entity.getPosition());
-                remaining_entities.append(&explosion)
+            if entity.on_remove_explode() {
+                let explosion = Entity::new_explosion(entity.get_position());
+                remaining_entities.push(explosion)
             }
         }
 
@@ -168,16 +166,16 @@ impl Game {
 
     fn draw_game(self) {
         for entity in self.entities {
-            move_cursor(entity.getPosition());
+            move_cursor(entity.get_position());
             draw(entity.avatar());
         }
 
         let (width, _) = get_size();
 
         let status = self.get_status();
-        move_cursor(Position(width / 2 - (status.len() / 2), 0));
+        move_cursor(Position(width / 2 - (status.len() as u16 / 2), 0));
 
-        draw(status);
+        draw(&status);
 
         render();
     }
@@ -188,7 +186,7 @@ impl Game {
         let message = format!(
             "current ship count: {}     destroyed count: {}",
             count_ships(self.entities),
-            self.shipCount - current_ship_count,
+            self.ship_count - current_ship_count,
         );
 
         message

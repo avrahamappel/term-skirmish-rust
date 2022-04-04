@@ -1,44 +1,24 @@
-// import (
-// 	"math/rand"
-// )
-
 use rand::prelude::*;
-use rand::{thread_rng, Rng};
 
-use crate::{ship::Ship, terminal::get_size};
+use crate::entities::{Entities, Entity, EntityBehavior};
+use crate::ship::Ship;
+use crate::terminal::get_size;
 
-pub struct Position(pub i32, pub i32);
+#[derive(PartialEq, Eq, Hash)]
+pub struct Position(pub u16, pub u16);
 
-pub trait Entity {
-    fn get_position(self) -> Position;
-    fn get_prev_position(self) -> Position;
-    fn should_remove(self) -> bool;
-    fn avatar(self) -> String;
-    fn take_turn(self, entities: Entities);
-    fn on_collide(self);
-    fn on_remove_explode(self) -> bool;
-}
-
-pub type Entities = Vec<Box<dyn Entity>>;
-
-pub trait HasRng {
-    fn rand<T>(self, limit: T) -> T {
-        rand(self.rng, limit)
-    }
-}
-
-fn rand<T>(rng: ThreadRng, limit: T) -> T {
-    rng.gen_range(0..limit)
-}
-
-pub fn collided<E1: Entity, E2: Entity>(entity_a: E1, entity_b: E2) -> bool {
-    let (posA, posB) = (entity_a.getPosition(), entity_b.getPosition());
+pub fn collided<E1, E2>(entity_a: E1, entity_b: E2) -> bool
+where
+    E1: EntityBehavior,
+    E2: EntityBehavior,
+{
+    let (posA, posB) = (entity_a.get_position(), entity_b.get_position());
 
     if positions_are_same(posA, posB) {
         return true;
     }
 
-    let (prevPosA, prevPosB) = (entity_a.getPrevPosition(), entity_b.getPrevPosition());
+    let (prevPosA, prevPosB) = (entity_a.get_prev_position(), entity_b.get_prev_position());
 
     // swapped position
     if positions_are_same(posA, prevPosB) && positions_are_same(posB, prevPosA) {
@@ -49,58 +29,55 @@ pub fn collided<E1: Entity, E2: Entity>(entity_a: E1, entity_b: E2) -> bool {
 }
 
 pub fn positions_are_same(a: Position, b: Position) -> bool {
-    return a[0] == b[0] && a[1] == b[1];
+    return a.0 == b.0 && a.1 == b.1;
 }
 
-pub fn random_position() -> (i32, i32) {
+pub fn random_position() -> Position {
     let rng = thread_rng();
 
     let (width, height) = get_size();
     let x = rng.gen_range(0..width) + 1;
     let y = rng.gen_range(0..height) + 2;
 
-    (x, y)
+    Position(x, y)
 }
 
-pub fn wall_position() -> i32 {
+pub fn wall_position() -> Position {
+    let rng = thread_rng();
     let (maxX, maxY) = get_size();
 
-    // switch rand.Intn(4) {
-    // case 0:
-    // 	// top
-    // 	return [2]i32{rand.Intn(maxX), 1}
-    // case 1:
-    // 	// bottom
-    // 	return [2]i32{rand.Intn(maxX), maxY}
-    // case 2:
-    // 	// left
-    // 	return [2]i32{1, rand.Intn(maxY)}
-    // default:
-    // 	// right
-    // 	return [2]i32{maxX, rand.Intn(maxY)}
-    // }
+    match rng.gen_range(0..4) {
+        // top
+        0 => Position(rng.gen_range(0..maxX.into()), 1),
+        // bottom
+        1 => Position(rng.gen_range(0..maxX.into()), maxY.into()),
+        // left
+        2 => Position(1, rng.gen_range(0..maxY.into())),
+        // right
+        _ => Position(maxX.into(), rng.gen_range(0..maxY.into())),
+    }
 }
 
-pub fn count_ships(entities: Entities) -> i32 {
-    get_ships_from_entities(entities).len()
+pub fn count_ships(entities: Entities) -> u16 {
+    get_ships_from_entities(entities).len() as u16
 }
 
 pub fn get_ships_from_entities(entities: Entities) -> Vec<Ship> {
     let ships = Vec::new();
 
     for e in entities {
-        if let Ship = e {
-            ships.append(e)
+        if let Entity::Ship(ship) = e {
+            ships.push(ship)
         }
     }
 
     ships
 }
 
-pub fn abs(i: i32) -> i32 {
+pub fn abs(i: i8) -> u16 {
     if i < 0 {
         i *= -1
     }
 
-    return i;
+    return i as u16;
 }

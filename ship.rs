@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
-use rand::distributions::Standard;
 use rand::prelude::*;
 use rand::Rng;
 
 use crate::bullet::Bullet;
+use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
 
-enum Team {
+#[derive(PartialEq, Eq, Hash)]
+pub enum Team {
     BLUE,
     RED,
     YELLOW,
@@ -18,9 +19,9 @@ enum Team {
     WHITE,
 }
 
-impl Distribution<Team> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Team {
-        match rng.gen_range(0..8) {
+impl Team {
+    pub fn from_rand(i: u16) -> Team {
+        match i {
             0 => Team::BLUE,
             1 => Team::RED,
             2 => Team::YELLOW,
@@ -28,21 +29,23 @@ impl Distribution<Team> for Standard {
             4 => Team::ORANGE,
             5 => Team::BROWN,
             6 => Team::PURPLE,
-            7 => Team::WHITE,
+            _ => Team::WHITE,
         }
     }
 }
 
+#[derive(PartialEq, Eq, Hash)]
 pub struct Ship {
     position: Position,
     prev_position: Position,
     destination: Position,
     alive: bool,
-    move_power: i32,
-    bullet_power: i32,
+    move_power: u16,
+    bullet_power: u16,
     team: Team,
-    rng: ThreadRng,
 }
+
+const rng: ThreadRng = thread_rng();
 
 impl Ship {
     pub fn new(t: Team) -> Ship {
@@ -54,23 +57,22 @@ impl Ship {
             destination: random_position(),
             alive: true,
             move_power: 3,
-            bullet_power: rand::thread_rng().gen_range(0..=10),
+            bullet_power: thread_rng().gen_range(0..=10),
             team: t,
-            rng: thread_rng(),
         }
     }
 
     fn shoot(self, entities: Entities) -> Option<Bullet> {
-        if self.bulletPower != 15 {
-            self.bulletPower = self.bulletPower + 1;
+        if self.bullet_power != 15 {
+            self.bullet_power = self.bullet_power + 1;
 
             return None;
         }
 
-        self.bulletPower = 0;
+        self.bullet_power = 0;
 
         // wuss out
-        if self.rand(2) == 0 {
+        if rng.gen_bool(0.5) {
             return None;
         }
 
@@ -80,7 +82,7 @@ impl Ship {
             return None;
         }
 
-        let seen = HashMap::new();
+        let seen: HashMap<Ship, ()> = HashMap::new();
 
         loop {
             // no one to shoot at
@@ -88,10 +90,10 @@ impl Ship {
                 break;
             }
 
-            let ship = ships[self.rand(ships.len())];
+            let ship = ships.choose(&mut rng).unwrap();
 
             // already seen
-            if seen[ship] {
+            if seen.contains_key(ship) {
                 continue;
             }
 
@@ -108,8 +110,8 @@ impl Ship {
                 continue;
             }
 
-            let x_dis = abs(self.getPosition()[0] - ship.getPosition()[0]);
-            let y_dis = abs(self.getPosition()[1] - ship.getPosition()[1]);
+            let x_dis = self.get_position().0 - ship.get_position().0;
+            let y_dis = self.get_position().1 - ship.get_position().1;
 
             // no straight shot
             if x_dis != 0 && y_dis != 0 && x_dis - y_dis != 0 {
@@ -120,38 +122,41 @@ impl Ship {
 
             // now there must be a straight shot
             // make bullet and fire
-            let x_pos = 0;
-            let y_pos = 0;
+            let x_pos: i8 = 0;
+            let y_pos: i8 = 0;
 
-            if self.getPosition()[0] > ship.getPosition()[0] {
+            if self.get_position().0 > ship.get_position().0 {
                 x_pos = -1
-            } else if self.getPosition()[0] < ship.getPosition()[0] {
+            } else if self.get_position().0 < ship.get_position().0 {
                 x_pos = 1
             }
 
-            if self.getPosition()[1] > ship.getPosition()[1] {
+            if self.get_position().1 > ship.get_position().1 {
                 y_pos = -1
-            } else if self.getPosition()[1] < ship.getPosition()[1] {
+            } else if self.get_position().1 < ship.get_position().1 {
                 y_pos = 1
             }
 
-            let pos = Position(self.position[0] + x_pos, self.position[1] + y_pos);
+            let pos = Position(
+                self.position.0 + x_pos as u16,
+                self.position.1 + y_pos as u16,
+            );
             let bullet = Bullet::new(pos, (x_pos, y_pos));
 
-            return Some(&bullet);
+            return Some(bullet);
         }
 
         return None;
     }
 
     fn move_ship(self, entities: Entities) {
-        if self.movePower != 3 {
-            self.movePower += 1;
+        if self.move_power != 3 {
+            self.move_power += 1;
 
             return;
         }
 
-        self.movePower = 0;
+        self.move_power = 0;
         self.move_toward_destination();
 
         if self.has_reached_destination() {
@@ -160,14 +165,16 @@ impl Ship {
     }
 
     fn get_destination(self, entities: Entities) -> Position {
-        if self.rand(2) == 0 {
+        if rng.gen_bool(0.5) {
             return random_position();
         }
 
         for e in entities {
-            let is_ship = e.type_id() == "Ship";
-            if is_ship && e.team != self.team {
-                return e.getPosition();
+            match e {
+                Entity::Ship(ship) if ship.team != self.team => {
+                    return e.get_position();
+                }
+                _ => continue,
             }
         }
 
@@ -179,42 +186,42 @@ impl Ship {
     }
 
     fn move_toward_destination(self) {
-        if self.position[0] < self.destination[0] {
+        if self.position.0 < self.destination.0 {
             self.move_right()
-        } else if self.position[0] > self.destination[0] {
+        } else if self.position.0 > self.destination.0 {
             self.move_left()
         }
 
-        if self.position[1] < self.destination[1] {
+        if self.position.1 < self.destination.1 {
             self.move_up()
-        } else if self.position[1] > self.destination[1] {
+        } else if self.position.1 > self.destination.1 {
             self.move_down()
         }
     }
 
     fn move_up(self) {
-        self.prev_position[1] = self.position[1];
-        self.position[1] += 1;
+        self.prev_position.1 = self.position.1;
+        self.position.1 += 1;
     }
 
     fn move_down(self) {
-        self.prev_position[1] = self.position[1];
-        self.position[1] -= 1;
+        self.prev_position.1 = self.position.1;
+        self.position.1 -= 1;
     }
 
     fn move_right(self) {
-        self.prev_position[0] = self.position[0];
-        self.position[0] += 1;
+        self.prev_position.0 = self.position.0;
+        self.position.0 += 1;
     }
 
     fn move_left(self) {
-        self.prev_position[0] = self.position[0];
-        self.position[0] -= 1;
+        self.prev_position.0 = self.position.0;
+        self.position.0 -= 1;
     }
 }
 
-impl Entity for Ship {
-    fn avatar(self) -> String {
+impl EntityBehavior for Ship {
+    fn avatar(&self) -> &str {
         match self.team {
             BLUE => "🔵",
             BROWN => "🟤",
@@ -227,15 +234,15 @@ impl Entity for Ship {
         }
     }
 
-    fn get_position(self) -> Position {
+    fn get_position(&self) -> Position {
         return self.position;
     }
 
-    fn get_prev_position(self) -> Position {
-        return self.prevPosition;
+    fn get_prev_position(&self) -> Position {
+        return self.prev_position;
     }
 
-    fn should_remove(self) -> bool {
+    fn should_remove(&self) -> bool {
         return !self.alive;
     }
 
@@ -243,14 +250,14 @@ impl Entity for Ship {
         self.move_ship(entities);
 
         if let Some(bullet) = self.shoot(entities) {
-            return vec![bullet];
+            return vec![Entity::Bullet(bullet)];
         }
 
         vec![]
     }
 
-    fn on_collide<E: Entity>(self, e: E) {
-        if let ship @ Ship = e {
+    fn on_collide(self, e: Entity) {
+        if let Entity::Ship(ship) = e {
             // don't explode colliding with same team
             if ship.team != self.team {
                 self.alive = false
@@ -262,5 +269,3 @@ impl Entity for Ship {
         return true;
     }
 }
-
-impl HasRng for Ship {}

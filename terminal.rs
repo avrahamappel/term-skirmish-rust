@@ -19,7 +19,7 @@ pub fn clear() {
     print!("\033[2J")
 }
 
-pub fn draw(str: String) {
+pub fn draw(str: &str) {
     print!("{}", str)
 }
 
@@ -27,9 +27,9 @@ pub fn render() {
     // screen.Flush()
 }
 
-pub fn get_size() -> Option<(u16, u16)> {
-    match terminal_size() {
-        Some((Width(width), Height(height))) => Some((width, height - 1)),
-        _ => None,
-    }
+/// Get the current size of the display
+pub fn get_size() -> (u16, u16) {
+    terminal_size()
+        .map(|(Width(width), Height(height))| (width, height - 1))
+        .expect("Couldn't determine display size. Are you using a TTY?")
 }
