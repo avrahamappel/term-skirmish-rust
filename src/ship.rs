@@ -7,7 +7,7 @@ use crate::bullet::Bullet;
 use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Team {
     BLUE,
     RED,
@@ -62,7 +62,7 @@ impl Ship {
         }
     }
 
-    fn shoot(self, entities: Entities) -> Option<Bullet> {
+    fn shoot(&mut self, entities: &Entities) -> Option<Bullet> {
         if self.bullet_power != 15 {
             self.bullet_power = self.bullet_power + 1;
 
@@ -76,13 +76,13 @@ impl Ship {
             return None;
         }
 
-        let ships = get_ships_from_entities(entities);
+        let ships = get_ships_from_entities(&entities);
 
         if ships.len() == 0 {
             return None;
         }
 
-        let seen: HashMap<Ship, ()> = HashMap::new();
+        let mut seen = HashMap::new();
 
         loop {
             // no one to shoot at
@@ -99,13 +99,13 @@ impl Ship {
 
             // same team
             if self.team == ship.team {
-                seen[ship] = ();
+                seen.insert(ship, ());
 
                 continue;
             }
 
             if positions_are_same(self.position, ship.position) {
-                seen[ship] = ();
+                seen.insert(ship, ());
 
                 continue;
             }
@@ -115,15 +115,15 @@ impl Ship {
 
             // no straight shot
             if x_dis != 0 && y_dis != 0 && x_dis - y_dis != 0 {
-                seen[ship] = ();
+                seen.insert(ship, ());
 
                 continue;
             }
 
             // now there must be a straight shot
             // make bullet and fire
-            let x_pos: i8 = 0;
-            let y_pos: i8 = 0;
+            let mut x_pos: i8 = 0;
+            let mut y_pos: i8 = 0;
 
             if self.get_position().0 > ship.get_position().0 {
                 x_pos = -1
@@ -149,7 +149,7 @@ impl Ship {
         return None;
     }
 
-    fn move_ship(self, entities: Entities) {
+    fn move_ship(&mut self, entities: &Entities) {
         if self.move_power != 3 {
             self.move_power += 1;
 
@@ -164,7 +164,7 @@ impl Ship {
         }
     }
 
-    fn get_destination(self, entities: Entities) -> Position {
+    fn get_destination(&self, entities: &Entities) -> Position {
         if rng.gen_bool(0.5) {
             return random_position();
         }
@@ -172,7 +172,7 @@ impl Ship {
         for e in entities {
             match e {
                 Entity::Ship(ship) if ship.team != self.team => {
-                    return e.get_position();
+                    return ship.get_position();
                 }
                 _ => continue,
             }
@@ -181,11 +181,11 @@ impl Ship {
         return random_position();
     }
 
-    fn has_reached_destination(self) -> bool {
+    fn has_reached_destination(&self) -> bool {
         return positions_are_same(self.position, self.destination);
     }
 
-    fn move_toward_destination(self) {
+    fn move_toward_destination(&mut self) {
         if self.position.0 < self.destination.0 {
             self.move_right()
         } else if self.position.0 > self.destination.0 {
@@ -199,22 +199,22 @@ impl Ship {
         }
     }
 
-    fn move_up(self) {
+    fn move_up(&mut self) {
         self.prev_position.1 = self.position.1;
         self.position.1 += 1;
     }
 
-    fn move_down(self) {
+    fn move_down(&mut self) {
         self.prev_position.1 = self.position.1;
         self.position.1 -= 1;
     }
 
-    fn move_right(self) {
+    fn move_right(&mut self) {
         self.prev_position.0 = self.position.0;
         self.position.0 += 1;
     }
 
-    fn move_left(self) {
+    fn move_left(&mut self) {
         self.prev_position.0 = self.position.0;
         self.position.0 -= 1;
     }
@@ -222,15 +222,15 @@ impl Ship {
 
 impl EntityBehavior for Ship {
     fn avatar(&self) -> &str {
-        match self.team {
-            BLUE => "🔵",
-            BROWN => "🟤",
-            GREEN => "🟢",
-            ORANGE => "🟠",
-            PURPLE => "🟣",
-            RED => "🔴",
-            WHITE => "⚪",
-            YELLOW => "🟡",
+        match &self.team {
+            Team::BLUE => "🔵",
+            Team::BROWN => "🟤",
+            Team::GREEN => "🟢",
+            Team::ORANGE => "🟠",
+            Team::PURPLE => "🟣",
+            Team::RED => "🔴",
+            Team::WHITE => "⚪",
+            Team::YELLOW => "🟡",
         }
     }
 
@@ -246,8 +246,8 @@ impl EntityBehavior for Ship {
         return !self.alive;
     }
 
-    fn take_turn(self, entities: Entities) -> Entities {
-        self.move_ship(entities);
+    fn take_turn(&mut self, entities: &Entities) -> Entities {
+        self.move_ship(&entities);
 
         if let Some(bullet) = self.shoot(entities) {
             return vec![Entity::Bullet(bullet)];
@@ -256,16 +256,15 @@ impl EntityBehavior for Ship {
         vec![]
     }
 
-    fn on_collide(self, e: Entity) {
-        if let Entity::Ship(ship) = e {
-            // don't explode colliding with same team
-            if ship.team != self.team {
-                self.alive = false
-            }
+    fn on_collide(&mut self, e: &Entity) {
+        match e {
+            Entity::Ship(ship) if ship.team != self.team => self.alive = false,
+            Entity::Bullet(_) => self.alive = false,
+            _ => (),
         }
     }
 
-    fn on_remove_explode(self) -> bool {
+    fn on_remove_explode(&self) -> bool {
         return true;
     }
 }

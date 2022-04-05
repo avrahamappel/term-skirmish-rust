@@ -33,22 +33,20 @@ impl EntityBehavior for Explosion {
         return "💥";
     }
 
-    fn take_turn(self, entities: Entities) -> Entities {
+    fn take_turn(&mut self, _: &Entities) -> Entities {
         if self.health > 0 {
             self.health -= 1;
         }
 
-        entities
+        vec![]
     }
 
-    fn on_collide(self, other_entity: Entity) {
+    fn on_collide(&mut self, other_entity: &Entity) {
         match other_entity {
             Entity::Explosion(other_explosion) => {
                 if self.health > other_explosion.health {
                     self.health += 100;
-                    other_explosion.health = 0;
                 } else {
-                    other_explosion.health += 100;
                     self.health = 0;
                 }
             }
@@ -56,7 +54,7 @@ impl EntityBehavior for Explosion {
         }
     }
 
-    fn on_remove_explode(self) -> bool {
+    fn on_remove_explode(&self) -> bool {
         return false;
     }
 }

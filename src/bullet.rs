@@ -22,7 +22,7 @@ impl Bullet {
         };
     }
 
-    fn move_self(self) {
+    fn move_self(&mut self) {
         self.prev_position = self.get_position();
         let x_pos = self.position.0 + self.direction.0 as u16;
         let y_pos = self.position.1 + self.direction.1 as u16;
@@ -30,11 +30,9 @@ impl Bullet {
         let (maxX, maxY) = get_size();
         if x_pos < 1 || x_pos > maxX || y_pos < 1 || y_pos > maxY {
             self.active = false;
-
-            return;
+        } else {
+            self.position = Position(x_pos, y_pos);
         }
-
-        self.position = Position(x_pos, y_pos)
     }
 }
 
@@ -55,24 +53,22 @@ impl EntityBehavior for Bullet {
         return !self.active;
     }
 
-    fn take_turn(self, entities: Entities) -> Entities {
+    fn take_turn(&mut self, _: &Entities) -> Entities {
         if self.bullet_power == 1 {
             self.move_self();
             self.bullet_power = 0;
-
-            return vec![];
+        } else {
+            self.bullet_power = 1;
         }
 
-        self.bullet_power = 1;
-
-        return vec![];
+        vec![]
     }
 
-    fn on_collide(self, _: Entity) {
+    fn on_collide(&mut self, _: &Entity) {
         self.active = false
     }
 
-    fn on_remove_explode(self) -> bool {
+    fn on_remove_explode(&self) -> bool {
         return false;
     }
 }

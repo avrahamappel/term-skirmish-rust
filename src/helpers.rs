@@ -4,10 +4,10 @@ use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::ship::Ship;
 use crate::terminal::get_size;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Position(pub u16, pub u16);
 
-pub fn collided<E1, E2>(entity_a: E1, entity_b: E2) -> bool
+pub fn collided<E1, E2>(entity_a: &E1, entity_b: &E2) -> bool
 where
     E1: EntityBehavior,
     E2: EntityBehavior,
@@ -33,7 +33,7 @@ pub fn positions_are_same(a: Position, b: Position) -> bool {
 }
 
 pub fn random_position() -> Position {
-    let rng = thread_rng();
+    let mut rng = thread_rng();
 
     let (width, height) = get_size();
     let x = rng.gen_range(0..width) + 1;
@@ -43,7 +43,7 @@ pub fn random_position() -> Position {
 }
 
 pub fn wall_position() -> Position {
-    let rng = thread_rng();
+    let mut rng = thread_rng();
     let (maxX, maxY) = get_size();
 
     match rng.gen_range(0..4) {
@@ -58,20 +58,18 @@ pub fn wall_position() -> Position {
     }
 }
 
-pub fn count_ships(entities: Entities) -> u16 {
+pub fn count_ships(entities: &Entities) -> u16 {
     get_ships_from_entities(entities).len() as u16
 }
 
-pub fn get_ships_from_entities(entities: Entities) -> Vec<Ship> {
-    let ships = Vec::new();
-
-    for e in entities {
-        if let Entity::Ship(ship) = e {
-            ships.push(ship)
-        }
-    }
-
-    ships
+pub fn get_ships_from_entities(entities: &Entities) -> Vec<&Ship> {
+    entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Ship(ship) => Some(ship),
+            _ => None,
+        })
+        .collect()
 }
 
 pub fn abs(i: i8) -> u16 {
