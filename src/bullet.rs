@@ -29,8 +29,8 @@ impl Bullet {
         let x_pos = self.position.0 + self.direction.0 as u16;
         let y_pos = self.position.1 + self.direction.1 as u16;
 
-        let (maxX, maxY) = get_size();
-        if x_pos < 1 || x_pos > maxX || y_pos < 1 || y_pos > maxY {
+        let (max_x, max_y) = get_size();
+        if x_pos < 1 || x_pos > max_x || y_pos < 1 || y_pos > max_y {
             self.active = false;
         } else {
             self.position = Position(x_pos, y_pos);

@@ -12,16 +12,16 @@ where
     E1: EntityBehavior,
     E2: EntityBehavior,
 {
-    let (posA, posB) = (entity_a.get_position(), entity_b.get_position());
+    let (pos_a, pos_b) = (entity_a.get_position(), entity_b.get_position());
 
-    if positions_are_same(posA, posB) {
+    if positions_are_same(pos_a, pos_b) {
         return true;
     }
 
-    let (prevPosA, prevPosB) = (entity_a.get_prev_position(), entity_b.get_prev_position());
+    let (prev_pos_a, prev_pos_b) = (entity_a.get_prev_position(), entity_b.get_prev_position());
 
     // swapped position
-    if positions_are_same(posA, prevPosB) && positions_are_same(posB, prevPosA) {
+    if positions_are_same(pos_a, prev_pos_b) && positions_are_same(pos_b, prev_pos_a) {
         return true;
     }
 
@@ -44,17 +44,17 @@ pub fn random_position() -> Position {
 
 pub fn wall_position() -> Position {
     let mut rng = thread_rng();
-    let (maxX, maxY) = get_size();
+    let (max_x, max_y) = get_size();
 
     match rng.gen_range(0..4) {
         // top
-        0 => Position(rng.gen_range(0..maxX.into()), 1),
+        0 => Position(rng.gen_range(0..max_x.into()), 1),
         // bottom
-        1 => Position(rng.gen_range(0..maxX.into()), maxY.into()),
+        1 => Position(rng.gen_range(0..max_x.into()), max_y.into()),
         // left
-        2 => Position(1, rng.gen_range(0..maxY.into())),
+        2 => Position(1, rng.gen_range(0..max_y.into())),
         // right
-        _ => Position(maxX.into(), rng.gen_range(0..maxY.into())),
+        _ => Position(max_x.into(), rng.gen_range(0..max_y.into())),
     }
 }
 
@@ -72,10 +72,10 @@ pub fn get_ships_from_entities(entities: &Entities) -> Vec<&Ship> {
         .collect()
 }
 
-pub fn abs(mut i: i8) -> u16 {
-    if i < 0 {
-        i *= -1
-    }
+// pub fn abs(mut i: i8) -> u16 {
+//     if i < 0 {
+//         i *= -1
+//     }
 
-    return i as u16;
-}
+//     return i as u16;
+// }
