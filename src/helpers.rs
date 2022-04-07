@@ -72,7 +72,7 @@ pub fn get_ships_from_entities(entities: &Entities) -> Vec<&Ship> {
         .collect()
 }
 
-pub fn abs(i: i8) -> u16 {
+pub fn abs(mut i: i8) -> u16 {
     if i < 0 {
         i *= -1
     }

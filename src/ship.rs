@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use rand::prelude::*;
-use rand::Rng;
 
 use crate::bullet::Bullet;
 use crate::entities::{Entities, Entity, EntityBehavior};
@@ -34,7 +33,7 @@ impl Team {
     }
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Ship {
     position: Position,
     prev_position: Position,
@@ -44,8 +43,6 @@ pub struct Ship {
     bullet_power: u16,
     team: Team,
 }
-
-const rng: ThreadRng = thread_rng();
 
 impl Ship {
     pub fn new(t: Team) -> Ship {
@@ -62,7 +59,7 @@ impl Ship {
         }
     }
 
-    fn shoot(&mut self, entities: &Entities) -> Option<Bullet> {
+    fn shoot(&mut self, rng: &mut ThreadRng, entities: &Entities) -> Option<Bullet> {
         if self.bullet_power != 15 {
             self.bullet_power = self.bullet_power + 1;
 
@@ -90,7 +87,7 @@ impl Ship {
                 break;
             }
 
-            let ship = ships.choose(&mut rng).unwrap();
+            let ship = ships.choose(rng).unwrap();
 
             // already seen
             if seen.contains_key(ship) {
@@ -149,7 +146,7 @@ impl Ship {
         return None;
     }
 
-    fn move_ship(&mut self, entities: &Entities) {
+    fn move_ship(&mut self, rng: &mut ThreadRng, entities: &Entities) {
         if self.move_power != 3 {
             self.move_power += 1;
 
@@ -160,11 +157,11 @@ impl Ship {
         self.move_toward_destination();
 
         if self.has_reached_destination() {
-            self.destination = self.get_destination(entities)
+            self.destination = self.get_destination(rng, entities)
         }
     }
 
-    fn get_destination(&self, entities: &Entities) -> Position {
+    fn get_destination(&self, rng: &mut ThreadRng, entities: &Entities) -> Position {
         if rng.gen_bool(0.5) {
             return random_position();
         }
@@ -246,22 +243,23 @@ impl EntityBehavior for Ship {
         return !self.alive;
     }
 
-    fn take_turn(&mut self, entities: &Entities) -> Entities {
-        self.move_ship(&entities);
+    fn take_turn(mut self, rng: &mut ThreadRng, entities: &Entities) -> (Ship, Option<Entity>) {
+        self.move_ship(rng, entities);
 
-        if let Some(bullet) = self.shoot(entities) {
-            return vec![Entity::Bullet(bullet)];
+        match self.shoot(rng, entities) {
+            Some(bullet) => (self, Some(Entity::Bullet(bullet))),
+            None => (self, None),
         }
-
-        vec![]
     }
 
-    fn on_collide(&mut self, e: &Entity) {
+    fn on_collide(mut self, e: &Entity) -> Ship {
         match e {
             Entity::Ship(ship) if ship.team != self.team => self.alive = false,
             Entity::Bullet(_) => self.alive = false,
             _ => (),
         }
+
+        self
     }
 
     fn on_remove_explode(&self) -> bool {

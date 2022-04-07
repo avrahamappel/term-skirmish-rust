@@ -1,7 +1,9 @@
+use rand::prelude::ThreadRng;
+
 use crate::entities::{Entities, Entity, EntityBehavior};
 use crate::helpers::*;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Explosion {
     position: Position,
     health: u16,
@@ -33,15 +35,15 @@ impl EntityBehavior for Explosion {
         return "💥";
     }
 
-    fn take_turn(&mut self, _: &Entities) -> Entities {
+    fn take_turn(mut self, _: &mut ThreadRng, _: &Entities) -> (Explosion, Option<Entity>) {
         if self.health > 0 {
             self.health -= 1;
         }
 
-        vec![]
+        (self, None)
     }
 
-    fn on_collide(&mut self, other_entity: &Entity) {
+    fn on_collide(mut self, other_entity: &Entity) -> Explosion {
         match other_entity {
             Entity::Explosion(other_explosion) => {
                 if self.health > other_explosion.health {
@@ -52,6 +54,8 @@ impl EntityBehavior for Explosion {
             }
             _ => self.health += 100,
         }
+
+        self
     }
 
     fn on_remove_explode(&self) -> bool {

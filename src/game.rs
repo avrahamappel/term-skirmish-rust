@@ -1,10 +1,3 @@
-// import (
-// 	"flag"
-// 	"os"
-// 	"os/signal"
-// )
-
-use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
 
@@ -20,6 +13,7 @@ pub struct Game {
     num_teams: u16,
     max_ships_per_wave: u16,
     entities: Entities,
+    new_entities: Entities,
     ship_count: u16,
     rng: ThreadRng,
 }
@@ -42,13 +36,14 @@ impl Game {
             over: false,
             num_teams,
             max_ships_per_wave,
-            entities: Vec::new(),
+            entities: Vec::with_capacity((num_teams * max_ships_per_wave).into()),
+            new_entities: Vec::new(),
             ship_count: 0,
             rng: thread_rng(),
         }
     }
 
-    pub fn before_game(self) -> Game {
+    fn before_game(self) -> Game {
         // // rand.Seed(time.Now().UnixNano())
 
         hide_cursor();
@@ -80,20 +75,20 @@ impl Game {
         self
     }
 
-    pub fn run_game(mut self) -> Game {
+    pub fn run_game(mut self) {
+        self = self.before_game();
+
         while !&self.over {
             clear();
 
-            let mut new_entities = self.take_turns();
+            self = self.take_turns().check_collisions().remove_entities();
 
-            self = self.check_collisions();
-            self = self.remove_entities();
             self.draw_game();
 
             // 60 fps
             thread::sleep(Duration::from_millis(1000 / 60));
 
-            self.entities.append(&mut new_entities);
+            self.append_new_entities();
 
             // 0.5% chance of reinforcements
             if self.rng.gen_range(0..200) == 0 {
@@ -101,36 +96,34 @@ impl Game {
             }
         }
 
+        self.after_game()
+    }
+
+    fn take_turns(mut self) -> Self {
+        let (entities, new_entity_options): (Vec<_>, Vec<_>) = self
+            .entities
+            .iter()
+            .map(|entity| entity.clone().take_turn(&mut self.rng, &self.entities))
+            .unzip();
+
+        self.entities = entities;
+        self.new_entities = new_entity_options.into_iter().flatten().collect::<Vec<_>>();
+
         self
     }
 
-    fn take_turns(&mut self) -> Entities {
-        self.entities
-            .iter_mut()
-            .flat_map(|&mut entity| entity.take_turn(&self.entities))
-            .collect()
-    }
-
-    fn check_collisions(mut self) -> Game {
-        let mut collided_entities: HashMap<&Entity, ()> = HashMap::new();
-
-        for entity in &mut self.entities {
-            if collided_entities.contains_key(entity) {
-                continue;
-            }
-
-            for otherEntity in &self.entities {
-                if entity == otherEntity {
-                    continue;
-                }
-
-                if collided(entity, otherEntity) {
-                    entity.on_collide(otherEntity);
-
-                    collided_entities.insert(entity, ());
-                }
-            }
-        }
+    fn check_collisions(mut self) -> Self {
+        self.entities = self
+            .entities
+            .iter()
+            .map(|entity| {
+                self.entities
+                    .iter()
+                    .find(|other| entity != *other && collided(entity, *other))
+                    .map(|other| entity.clone().on_collide(other))
+                    .unwrap_or_else(|| entity.clone())
+            })
+            .collect();
 
         self
     }
@@ -154,6 +147,10 @@ impl Game {
         self.entities = remaining_entities;
 
         self
+    }
+
+    fn append_new_entities(&mut self) {
+        self.entities.append(&mut self.new_entities);
     }
 
     fn draw_game(&self) {
@@ -184,7 +181,7 @@ impl Game {
         message
     }
 
-    pub fn after_game(self) {
+    fn after_game(self) {
         clear();
         show_cursor();
 

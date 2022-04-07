@@ -1,9 +1,11 @@
+use rand::prelude::ThreadRng;
+
 use crate::bullet::Bullet;
 use crate::explosion::Explosion;
 use crate::helpers::Position;
 use crate::ship::{Ship, Team};
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Entity {
     Ship(Ship),
     Bullet(Bullet),
@@ -25,8 +27,10 @@ pub trait EntityBehavior {
     fn get_prev_position(&self) -> Position;
     fn should_remove(&self) -> bool;
     fn avatar(&self) -> &str;
-    fn take_turn(&mut self, entities: &Entities) -> Entities;
-    fn on_collide(&mut self, other: &Entity);
+    fn take_turn(self, rng: &mut ThreadRng, entities: &Entities) -> (Self, Option<Entity>)
+    where
+        Self: Sized;
+    fn on_collide(self, other: &Entity) -> Self;
     fn on_remove_explode(&self) -> bool;
 }
 
@@ -58,12 +62,29 @@ impl EntityBehavior for Entity {
         match_entity!(self, avatar)
     }
 
-    fn take_turn(&mut self, entities: &Entities) -> Entities {
-        match_entity!(self, take_turn, entities)
+    fn take_turn(self, rng: &mut ThreadRng, entities: &Entities) -> (Self, Option<Entity>) {
+        match self {
+            Self::Ship(e) => {
+                let (e, other) = e.take_turn(rng, entities);
+                (Self::Ship(e), other)
+            }
+            Self::Bullet(e) => {
+                let (e, other) = e.take_turn(rng, entities);
+                (Self::Bullet(e), other)
+            }
+            Self::Explosion(e) => {
+                let (e, other) = e.take_turn(rng, entities);
+                (Self::Explosion(e), other)
+            }
+        }
     }
 
-    fn on_collide(&mut self, other: &Entity) {
-        match_entity!(self, on_collide, other)
+    fn on_collide(self, other: &Entity) -> Self {
+        match self {
+            Self::Ship(e) => Self::Ship(e.on_collide(other)),
+            Self::Bullet(e) => Self::Bullet(e.on_collide(other)),
+            Self::Explosion(e) => Self::Explosion(e.on_collide(other)),
+        }
     }
 
     fn on_remove_explode(&self) -> bool {

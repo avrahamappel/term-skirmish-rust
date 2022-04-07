@@ -27,8 +27,5 @@ fn main() {
 }
 
 fn run(args: Args) {
-    Game::new(args.teams, args.wave)
-        .before_game()
-        .run_game()
-        .after_game();
+    Game::new(args.teams, args.wave).run_game()
 }
