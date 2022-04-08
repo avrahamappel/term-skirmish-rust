@@ -15,13 +15,13 @@ pub struct Bullet {
 
 impl Bullet {
     pub fn new(pos: Position, direction: (i8, i8)) -> Bullet {
-        return Bullet {
+        Bullet {
             position: pos,
             prev_position: pos,
             direction,
             active: true,
             bullet_power: 1,
-        };
+        }
     }
 
     fn move_self(&mut self) {
@@ -40,19 +40,19 @@ impl Bullet {
 
 impl EntityBehavior for Bullet {
     fn avatar(&self) -> &str {
-        return "🔸";
+        "🔸"
     }
 
     fn get_position(&self) -> Position {
-        return self.position;
+        self.position
     }
 
     fn get_prev_position(&self) -> Position {
-        return self.prev_position;
+        self.prev_position
     }
 
     fn should_remove(&self) -> bool {
-        return !self.active;
+        !self.active
     }
 
     fn take_turn(mut self, _: &mut ThreadRng, _: &Entities) -> (Bullet, Option<Entity>) {
@@ -72,6 +72,6 @@ impl EntityBehavior for Bullet {
     }
 
     fn on_remove_explode(&self) -> bool {
-        return false;
+        false
     }
 }

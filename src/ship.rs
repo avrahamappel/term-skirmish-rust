@@ -61,7 +61,7 @@ impl Ship {
 
     fn shoot(&mut self, rng: &mut ThreadRng, entities: &Entities) -> Option<Bullet> {
         if self.bullet_power != 15 {
-            self.bullet_power = self.bullet_power + 1;
+            self.bullet_power += 1;
 
             return None;
         }
@@ -73,9 +73,9 @@ impl Ship {
             return None;
         }
 
-        let ships = get_ships_from_entities(&entities);
+        let ships = get_ships_from_entities(entities);
 
-        if ships.len() == 0 {
+        if ships.is_empty() {
             return None;
         }
 
@@ -143,7 +143,7 @@ impl Ship {
             return Some(bullet);
         }
 
-        return None;
+        None
     }
 
     fn move_ship(&mut self, rng: &mut ThreadRng, entities: &Entities) {
@@ -175,11 +175,11 @@ impl Ship {
             }
         }
 
-        return random_position();
+        random_position()
     }
 
     fn has_reached_destination(&self) -> bool {
-        return positions_are_same(self.position, self.destination);
+        positions_are_same(self.position, self.destination)
     }
 
     fn move_toward_destination(&mut self) {
@@ -232,15 +232,15 @@ impl EntityBehavior for Ship {
     }
 
     fn get_position(&self) -> Position {
-        return self.position;
+        self.position
     }
 
     fn get_prev_position(&self) -> Position {
-        return self.prev_position;
+        self.prev_position
     }
 
     fn should_remove(&self) -> bool {
-        return !self.alive;
+        !self.alive
     }
 
     fn take_turn(mut self, rng: &mut ThreadRng, entities: &Entities) -> (Ship, Option<Entity>) {
@@ -263,6 +263,6 @@ impl EntityBehavior for Ship {
     }
 
     fn on_remove_explode(&self) -> bool {
-        return true;
+        true
     }
 }

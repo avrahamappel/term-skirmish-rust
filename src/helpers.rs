@@ -25,11 +25,11 @@ where
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn positions_are_same(a: Position, b: Position) -> bool {
-    return a.0 == b.0 && a.1 == b.1;
+    a.0 == b.0 && a.1 == b.1
 }
 
 pub fn random_position() -> Position {
@@ -48,13 +48,13 @@ pub fn wall_position() -> Position {
 
     match rng.gen_range(0..4) {
         // top
-        0 => Position(rng.gen_range(0..max_x.into()), 1),
+        0 => Position(rng.gen_range(0..max_x), 1),
         // bottom
-        1 => Position(rng.gen_range(0..max_x.into()), max_y.into()),
+        1 => Position(rng.gen_range(0..max_x), max_y),
         // left
-        2 => Position(1, rng.gen_range(0..max_y.into())),
+        2 => Position(1, rng.gen_range(0..max_y)),
         // right
-        _ => Position(max_x.into(), rng.gen_range(0..max_y.into())),
+        _ => Position(max_x, rng.gen_range(0..max_y)),
     }
 }
 

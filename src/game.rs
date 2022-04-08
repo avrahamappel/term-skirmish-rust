@@ -20,13 +20,13 @@ pub struct Game {
 
 impl Game {
     pub fn new(team_count: u16, max_wave_count: u16) -> Game {
-        let num_teams = if team_count < 1 || team_count > 8 {
+        let num_teams = if !(1..=8).contains(&team_count) {
             2
         } else {
             team_count
         };
 
-        let max_ships_per_wave = if max_wave_count < 1 || max_wave_count > 100 {
+        let max_ships_per_wave = if !(1..=100).contains(&max_wave_count) {
             20
         } else {
             max_wave_count

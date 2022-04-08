@@ -11,28 +11,28 @@ pub struct Explosion {
 
 impl Explosion {
     pub fn new(pos: Position) -> Explosion {
-        return Explosion {
+        Explosion {
             position: pos,
             health: 10,
-        };
+        }
     }
 }
 
 impl EntityBehavior for Explosion {
     fn get_position(&self) -> Position {
-        return self.position;
+        self.position
     }
 
     fn get_prev_position(&self) -> Position {
-        return self.position;
+        self.position
     }
 
     fn should_remove(&self) -> bool {
-        return self.health == 0;
+        self.health == 0
     }
 
     fn avatar(&self) -> &str {
-        return "💥";
+        "💥"
     }
 
     fn take_turn(mut self, _: &mut ThreadRng, _: &Entities) -> (Explosion, Option<Entity>) {
@@ -59,6 +59,6 @@ impl EntityBehavior for Explosion {
     }
 
     fn on_remove_explode(&self) -> bool {
-        return false;
+        false
     }
 }
