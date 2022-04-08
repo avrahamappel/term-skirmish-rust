@@ -1,22 +1,24 @@
+use std::io::{self, Write};
+
 use terminal_size::terminal_size;
 use terminal_size::{Height, Width};
 
 use crate::helpers::Position;
 
 pub fn hide_cursor() {
-    print!("\\033[?25l")
+    print!("\x1B[?25l")
 }
 
 pub fn show_cursor() {
-    print!("\\033[?25h")
+    print!("\x1B[?25h")
 }
 
 pub fn move_cursor(p: Position) {
-    print!("\\033[{};{}H", p.1, p.0);
+    print!("\x1B[{};{}H", p.1, p.0);
 }
 
 pub fn clear() {
-    print!("\\033[2J")
+    print!("\x1B[2J")
 }
 
 pub fn draw(str: &str) {
@@ -24,7 +26,7 @@ pub fn draw(str: &str) {
 }
 
 pub fn render() {
-    // screen.Flush()
+    io::stdout().flush().unwrap();
 }
 
 /// Get the current size of the display

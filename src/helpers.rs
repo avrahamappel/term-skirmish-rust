@@ -72,10 +72,12 @@ pub fn get_ships_from_entities(entities: &Entities) -> Vec<&Ship> {
         .collect()
 }
 
-pub fn abs(mut i: i32) -> u16 {
+/// There's probably something for this in the std library,
+/// but I'm too lazy to try to find it
+pub fn abs(mut i: i32) -> i32 {
     if i < 0 {
         i *= -1
     }
 
-    i as u16
+    i
 }
