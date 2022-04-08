@@ -8,13 +8,13 @@ use crate::terminal::get_size;
 pub struct Bullet {
     position: Position,
     prev_position: Position,
-    direction: (i8, i8),
+    direction: (i16, i16),
     active: bool,
-    bullet_power: u16,
+    bullet_power: i32,
 }
 
 impl Bullet {
-    pub fn new(pos: Position, direction: (i8, i8)) -> Bullet {
+    pub fn new(pos: Position, direction: (i16, i16)) -> Bullet {
         Bullet {
             position: pos,
             prev_position: pos,
@@ -26,11 +26,11 @@ impl Bullet {
 
     fn move_self(&mut self) {
         self.prev_position = self.get_position();
-        let x_pos = self.position.0 + self.direction.0 as u16;
-        let y_pos = self.position.1 + self.direction.1 as u16;
+        let x_pos = self.position.0 + self.direction.0 as i32;
+        let y_pos = self.position.1 + self.direction.1 as i32;
 
         let (max_x, max_y) = get_size();
-        if x_pos < 1 || x_pos > max_x || y_pos < 1 || y_pos > max_y {
+        if x_pos < 1 || x_pos > max_x.into() || y_pos < 1 || y_pos > max_y.into() {
             self.active = false;
         } else {
             self.position = Position(x_pos, y_pos);

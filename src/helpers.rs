@@ -5,7 +5,7 @@ use crate::ship::Ship;
 use crate::terminal::get_size;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Position(pub u16, pub u16);
+pub struct Position(pub i32, pub i32);
 
 pub fn collided<E1, E2>(entity_a: &E1, entity_b: &E2) -> bool
 where
@@ -39,7 +39,7 @@ pub fn random_position() -> Position {
     let x = rng.gen_range(0..width) + 1;
     let y = rng.gen_range(0..height) + 2;
 
-    Position(x, y)
+    Position(x.into(), y.into())
 }
 
 pub fn wall_position() -> Position {
@@ -48,13 +48,13 @@ pub fn wall_position() -> Position {
 
     match rng.gen_range(0..4) {
         // top
-        0 => Position(rng.gen_range(0..max_x), 1),
+        0 => Position(rng.gen_range(0..max_x).into(), 1),
         // bottom
-        1 => Position(rng.gen_range(0..max_x), max_y),
+        1 => Position(rng.gen_range(0..max_x).into(), max_y.into()),
         // left
-        2 => Position(1, rng.gen_range(0..max_y)),
+        2 => Position(1, rng.gen_range(0..max_y).into()),
         // right
-        _ => Position(max_x, rng.gen_range(0..max_y)),
+        _ => Position(max_x.into(), rng.gen_range(0..max_y).into()),
     }
 }
 
@@ -72,10 +72,10 @@ pub fn get_ships_from_entities(entities: &Entities) -> Vec<&Ship> {
         .collect()
 }
 
-// pub fn abs(mut i: i8) -> u16 {
-//     if i < 0 {
-//         i *= -1
-//     }
+pub fn abs(mut i: i32) -> u16 {
+    if i < 0 {
+        i *= -1
+    }
 
-//     return i as u16;
-// }
+    i as u16
+}

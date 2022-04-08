@@ -62,7 +62,7 @@ impl Game {
     }
 
     fn reinforce(mut self) -> Game {
-        let team = Team::from_rand(self.rng.gen_range(0..self.num_teams));
+        let team = Team::from_rand(self.rng.gen_range(0..self.num_teams).into());
         let ship_count = self.rng.gen_range(0..self.max_ships_per_wave) + 1;
 
         for _ in 0..=ship_count {
@@ -162,7 +162,7 @@ impl Game {
         let (width, _) = get_size();
 
         let status = self.get_status();
-        move_cursor(Position(width / 2 - (status.len() as u16 / 2), 0));
+        move_cursor(Position((width / 2 - (status.len() as u16 / 2)).into(), 0));
 
         draw(&status);
 

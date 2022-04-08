@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use rand::prelude::*;
 
@@ -19,7 +19,7 @@ pub enum Team {
 }
 
 impl Team {
-    pub fn from_rand(i: u16) -> Team {
+    pub fn from_rand(i: u32) -> Team {
         match i {
             0 => Team::BLUE,
             1 => Team::RED,
@@ -39,8 +39,8 @@ pub struct Ship {
     prev_position: Position,
     destination: Position,
     alive: bool,
-    move_power: u16,
-    bullet_power: u16,
+    move_power: i32,
+    bullet_power: i32,
     team: Team,
 }
 
@@ -79,7 +79,7 @@ impl Ship {
             return None;
         }
 
-        let mut seen = HashMap::new();
+        let mut seen = HashSet::new();
 
         loop {
             // no one to shoot at
@@ -90,37 +90,37 @@ impl Ship {
             let ship = ships.choose(rng).unwrap();
 
             // already seen
-            if seen.contains_key(ship) {
+            if seen.contains(ship) {
                 continue;
             }
 
             // same team
             if self.team == ship.team {
-                seen.insert(ship, ());
+                seen.insert(ship);
 
                 continue;
             }
 
             if positions_are_same(self.position, ship.position) {
-                seen.insert(ship, ());
+                seen.insert(ship);
 
                 continue;
             }
 
-            let x_dis = self.get_position().0 - ship.get_position().0;
-            let y_dis = self.get_position().1 - ship.get_position().1;
+            let x_dis = abs(self.get_position().0 - ship.get_position().0);
+            let y_dis = abs(self.get_position().1 - ship.get_position().1);
 
             // no straight shot
             if x_dis != 0 && y_dis != 0 && x_dis - y_dis != 0 {
-                seen.insert(ship, ());
+                seen.insert(ship);
 
                 continue;
             }
 
             // now there must be a straight shot
             // make bullet and fire
-            let mut x_pos: i8 = 0;
-            let mut y_pos: i8 = 0;
+            let mut x_pos = 0;
+            let mut y_pos = 0;
 
             if self.get_position().0 > ship.get_position().0 {
                 x_pos = -1
@@ -135,8 +135,8 @@ impl Ship {
             }
 
             let pos = Position(
-                self.position.0 + x_pos as u16,
-                self.position.1 + y_pos as u16,
+                self.position.0 + x_pos as i32,
+                self.position.1 + y_pos as i32,
             );
             let bullet = Bullet::new(pos, (x_pos, y_pos));
 
