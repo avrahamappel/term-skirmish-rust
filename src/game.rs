@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
@@ -9,7 +11,7 @@ use crate::ship::Team;
 use crate::terminal::*;
 
 pub struct Game {
-    over: bool,
+    over: Arc<AtomicBool>,
     num_teams: u16,
     max_ships_per_wave: u16,
     entities: Entities,
@@ -18,6 +20,7 @@ pub struct Game {
     rng: ThreadRng,
 }
 
+// TODO add ability to pass seed
 impl Game {
     pub fn new(team_count: u16, max_wave_count: u16) -> Game {
         let num_teams = if !(1..=8).contains(&team_count) {
@@ -33,7 +36,7 @@ impl Game {
         };
 
         Game {
-            over: false,
+            over: Arc::new(AtomicBool::new(false)),
             num_teams,
             max_ships_per_wave,
             entities: Vec::with_capacity((num_teams * max_ships_per_wave).into()),
@@ -44,18 +47,11 @@ impl Game {
     }
 
     fn before_game(self) -> Game {
-        // // rand.Seed(time.Now().UnixNano())
-
         hide_cursor();
 
-        // c := make(chan os.Signal, 1)
-        // signal.Notify(c, os.Interrupt)
+        let over = Arc::clone(&self.over);
 
-        // go fn() {
-        // 	for range c {
-        // 		self.over = true
-        // 	}
-        // }()
+        ctrlc::set_handler(move || over.store(true, Relaxed)).expect("Couldn't set SIGINT handler");
 
         // initial wave
         self.reinforce()
@@ -78,7 +74,7 @@ impl Game {
     pub fn run_game(mut self) {
         self = self.before_game();
 
-        while !&self.over {
+        while !self.over.load(Relaxed) {
             clear();
 
             self = self.take_turns().check_collisions().remove_entities();
