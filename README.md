@@ -1,38 +1,20 @@
-# Term Skirmish 🔵 🔸 🔸 🔥
+# Term Skirmish Rust 🦀
 
-Term Skirmish is a zero-player battle that takes place in your terminal.
+Term Skirmish Rust is a zero-player battle that takes place in your terminal. This project is a rewrite of Tom's excellent [term-skirmish](github.com/tom-on-the-internet/term-skirmish).
 
-## Prerequisites
+## Why did you do this?
 
-1. A terminal that supports ANSI escape sequences (yours probably does).
-2. A terminal/font that support emojis.
+Because Rust looks much better in my editor. Also I think it's probably faster (maybe)?
 
 ## Installation
 
-Go:
-
 ```bash
-go install github.com/tom-on-the-internet/term-skirmish@latest'
-term-skirmish
+cargo install --git https://github.com/avrahamappel/term-skirmish-rust
+term-skirmish-rust
 ```
 
 Docker:
 
 ```bash
-docker run --rm -it golang bash -c 'go install github.com/tom-on-the-internet/term-skirmish@latest && term-skirmish'
+docker run --rm -it rust bash -c 'cargo install --git https://github.com/avrahamappel/term-skirmish-rust && term-skirmish-rust'
 ```
-
-## Demo Video
-
-https://user-images.githubusercontent.com/8356936/160037965-597a2c7a-1dd7-4208-87d3-46ae3c86cb50.mov
-
-## How does this work?
-
-Here's a video where I explain how it works.
-
-TODO: Add video.
-
-## Notes
-
-The code in this repo is not high quality. It was hacked together in a few evenings.
-Please do not copy its style, or think this is how I code generally.
