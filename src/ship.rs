@@ -39,6 +39,36 @@ macro_rules! ship_color {
     };
 }
 
+macro_rules! ship_direction {
+    ($pos:expr, $des:expr, $color:literal) => {{
+        if $pos.0 == $des.0 {
+            if $pos.1 == $des.1 {
+                ship_color!($color, "@")
+            } else if $pos.1 > $des.1 {
+                ship_color!($color, "^")
+            } else {
+                ship_color!($color, "v")
+            }
+        } else if $pos.0 < $des.0 {
+            if $pos.1 == $des.1 {
+                ship_color!($color, ">")
+            } else if $pos.1 > $des.1 {
+                ship_color!($color, "┐")
+            } else {
+                ship_color!($color, "┘")
+            }
+        } else {
+            if $pos.1 == $des.1 {
+                ship_color!($color, "<")
+            } else if $pos.1 > $des.1 {
+                ship_color!($color, "┌")
+            } else {
+                ship_color!($color, "└")
+            }
+        }
+    }};
+}
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Ship {
     position: Position,
@@ -226,14 +256,14 @@ impl Ship {
 impl EntityBehavior for Ship {
     fn avatar(&self) -> &str {
         match &self.team {
-            Team::BLUE => ship_color!("34", "@"),
-            Team::BROWN => ship_color!("40", "#"),
-            Team::GREEN => ship_color!("32", "$"),
-            Team::ORANGE => ship_color!("36", "%"),
-            Team::PURPLE => ship_color!("35", "&"),
-            Team::RED => ship_color!("31", "?"),
-            Team::WHITE => ship_color!("37", "!"),
-            Team::YELLOW => ship_color!("33", "X"),
+            Team::BLUE => ship_direction!(self.position, self.destination, "34"),
+            Team::BROWN => ship_direction!(self.position, self.destination, "40"),
+            Team::GREEN => ship_direction!(self.position, self.destination, "32$"),
+            Team::ORANGE => ship_direction!(self.position, self.destination, "36"),
+            Team::PURPLE => ship_direction!(self.position, self.destination, "35"),
+            Team::RED => ship_direction!(self.position, self.destination, "31"),
+            Team::WHITE => ship_direction!(self.position, self.destination, "37"),
+            Team::YELLOW => ship_direction!(self.position, self.destination, "33"),
         }
     }
 
