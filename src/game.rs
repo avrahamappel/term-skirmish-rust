@@ -81,8 +81,8 @@ impl Game {
 
             self.draw_game();
 
-            // 60 fps
-            thread::sleep(Duration::from_millis(1000 / 60));
+            // 70 fps, because Rust is faster than Go
+            thread::sleep(Duration::from_millis(1000 / 70));
 
             self.append_new_entities();
 
