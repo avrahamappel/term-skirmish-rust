@@ -34,32 +34,34 @@ pub trait EntityBehavior {
     fn on_remove_explode(&self) -> bool;
 }
 
-#[macro_export]
-macro_rules! match_entity {
-    ( $entity:expr, $name:ident $( , $arg:ident )* ) => {
+// I would have liked to use the `enum_dispatch` crate here, but
+// it doesn't support customizing the implementation methods
+macro_rules! delegate {
+    ($entity:expr, $name:ident) => {
+       delegate!($entity; Ship, Bullet, Explosion; $name)
+    };
+    ($entity:expr; $($member:ident),+; $name:ident) => {
         match $entity {
-            Entity::Ship(e) => e.$name($($arg),*),
-            Entity::Bullet(e) => e.$name($($arg),*),
-            Entity::Explosion(e) => e.$name($($arg),*),
+            $(Self::$member(e) => e.$name(),)+
         }
     };
 }
 
 impl EntityBehavior for Entity {
     fn get_position(&self) -> Position {
-        match_entity!(self, get_position)
+        delegate!(&self, get_position)
     }
 
     fn get_prev_position(&self) -> Position {
-        match_entity!(self, get_prev_position)
+        delegate!(self, get_prev_position)
     }
 
     fn should_remove(&self) -> bool {
-        match_entity!(self, should_remove)
+        delegate!(self, should_remove)
     }
 
     fn avatar(&self) -> &str {
-        match_entity!(self, avatar)
+        delegate!(self, avatar)
     }
 
     fn take_turn(self, rng: &mut ThreadRng, entities: &Entities) -> (Self, Option<Entity>) {
@@ -88,7 +90,7 @@ impl EntityBehavior for Entity {
     }
 
     fn on_remove_explode(&self) -> bool {
-        match_entity!(self, on_remove_explode)
+        delegate!(self, on_remove_explode)
     }
 }
 
