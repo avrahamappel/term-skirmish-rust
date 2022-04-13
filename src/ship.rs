@@ -33,6 +33,12 @@ impl Team {
     }
 }
 
+macro_rules! ship_color {
+    ($color:literal, $char:literal) => {
+        concat!("\x1B[0;", $color, "m", $char, "\x1B[0m")
+    };
+}
+
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Ship {
     position: Position,
@@ -220,14 +226,14 @@ impl Ship {
 impl EntityBehavior for Ship {
     fn avatar(&self) -> &str {
         match &self.team {
-            Team::BLUE => "🔵",
-            Team::BROWN => "🟤",
-            Team::GREEN => "🟢",
-            Team::ORANGE => "🟠",
-            Team::PURPLE => "🟣",
-            Team::RED => "🔴",
-            Team::WHITE => "⚪",
-            Team::YELLOW => "🟡",
+            Team::BLUE => ship_color!("34", "@"),
+            Team::BROWN => ship_color!("40", "#"),
+            Team::GREEN => ship_color!("32", "$"),
+            Team::ORANGE => ship_color!("36", "%"),
+            Team::PURPLE => ship_color!("35", "&"),
+            Team::RED => ship_color!("31", "?"),
+            Team::WHITE => ship_color!("37", "!"),
+            Team::YELLOW => ship_color!("33", "X"),
         }
     }
 

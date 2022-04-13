@@ -32,7 +32,7 @@ impl EntityBehavior for Explosion {
     }
 
     fn avatar(&self) -> &str {
-        "💥"
+        "\x1B[0;91m*\x1B[0m"
     }
 
     fn take_turn(mut self, _: &mut ThreadRng, _: &Entities) -> (Explosion, Option<Entity>) {

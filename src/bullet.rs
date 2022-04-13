@@ -40,7 +40,21 @@ impl Bullet {
 
 impl EntityBehavior for Bullet {
     fn avatar(&self) -> &str {
-        "🔸"
+        if self.direction.0 == 0 {
+            return "\x1B[0;93m|\x1B[0m";
+        }
+
+        if self.direction.1 == 0 {
+            return "\x1B[0;93m-\x1B[0m";
+        }
+
+        if (self.direction.0 > 0 && self.direction.1 > 0)
+            || (self.direction.0 < 0 && self.direction.1 < 0)
+        {
+            return "\x1B[0;93m\\\x1B[0m";
+        }
+
+        "\x1B[0;93m/\x1B[0m"
     }
 
     fn get_position(&self) -> Position {
