@@ -182,7 +182,7 @@ impl Game {
         show_cursor();
 
         move_cursor(Position(1, 1));
-        draw(" 🔵  🔸 🔸 🔥");
+        draw(" \x1B[0;34m>\x1B[0m \x1B[0;93m-\x1B[0m \x1B[0;93m-\x1B[0m \x1B[0;91m*\x1B[0m");
 
         move_cursor(Position(0, 3));
 
